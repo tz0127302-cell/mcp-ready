@@ -1,0 +1,408 @@
+openapi: 3.0.3
+info:
+  title: Orders & Catalog API
+  version: 1.4.0
+  description: |
+    Orders & Catalog is a small HTTP API for browsing products and placing orders.
+    Rate limits apply to list endpoints. Send a bearer token or a service API key.
+    Page with the cursor from the previous response. Retry a create with the same
+    Idempotency-Key to get the original order back.
+servers:
+  - url: https://api.example.com
+    description: Production origin. The generated MCP server does not call this URL unless MCP_READY_MOCK=0.
+security:
+  - bearerAuth: []
+  - serviceKey: []
+tags:
+  - name: Catalog
+  - name: Orders
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness probe
+      description: Public liveness probe. No credentials. Call it before anything else to see that the API is up.
+      tags: [Catalog]
+      security: []
+      responses:
+        "200":
+          description: The process is serving traffic.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+              example:
+                status: ok
+  /products:
+    get:
+      operationId: listProducts
+      summary: List products
+      description: Return a page of products in the catalog. Pass the cursor from nextCursor to continue. Stop when nextCursor is null.
+      tags: [Catalog]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of products.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductPage"
+              example:
+                data:
+                  - id: prod_notebook
+                    name: Field Notebook
+                    priceCents: 1800
+                    currency: USD
+                  - id: prod_pen
+                    name: Brass Pen
+                    priceCents: 2400
+                    currency: USD
+                nextCursor: null
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /products/{productId}:
+    get:
+      operationId: getProduct
+      summary: Get a product
+      description: Fetch one catalog product by its id. Returns 404 when the id is unknown.
+      tags: [Catalog]
+      parameters:
+        - $ref: "#/components/parameters/ProductId"
+      responses:
+        "200":
+          description: The product.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+              example:
+                id: prod_notebook
+                name: Field Notebook
+                priceCents: 1800
+                currency: USD
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /orders:
+    get:
+      operationId: listOrders
+      summary: List orders
+      description: Return a page of orders for the caller. Use cursor and limit. nextCursor is null on the last page.
+      tags: [Orders]
+      parameters:
+        - $ref: "#/components/parameters/Cursor"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: A page of orders.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderPage"
+              example:
+                data:
+                  - id: ord_1001
+                    sku: prod_notebook
+                    quantity: 1
+                    status: placed
+                nextCursor: null
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    post:
+      operationId: createOrder
+      summary: Create an order
+      description: Place an order for a single SKU. Send an Idempotency-Key and reuse it when you retry so the same attempt does not create two orders.
+      tags: [Orders]
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrder"
+            example:
+              sku: prod_notebook
+              quantity: 1
+              customerNote: Leave at the side door.
+      responses:
+        "201":
+          description: The order that was created, or the original order when the key is replayed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+              example:
+                id: ord_1001
+                sku: prod_notebook
+                quantity: 1
+                status: placed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          description: The idempotency key was reused with a different body.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "422":
+          description: The SKU is unknown or the quantity is invalid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      summary: Get an order
+      description: Fetch one order by id for the authenticated caller.
+      tags: [Orders]
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: The order.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+              example:
+                id: ord_1001
+                sku: prod_notebook
+                quantity: 1
+                status: placed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /orders/{orderId}/cancel:
+    post:
+      operationId: cancelOrder
+      summary: Cancel
+      description: Cancel an order.
+      tags: [Orders]
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: The cancelled order.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+              example:
+                id: ord_1001
+                sku: prod_notebook
+                quantity: 1
+                status: cancelled
+        "400":
+          description: The order cannot be cancelled.
+  /admin/execute:
+    post:
+      operationId: executeAdminAction
+      summary: Admin action
+      description: Do something.
+      tags: [Orders]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCommand"
+      responses:
+        "200":
+          description: Whatever the action returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Short-lived bearer token issued by your identity provider. Send it in the Authorization header.
+    serviceKey:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: Server-to-server key for internal workers. Rotate it. Do not paste it into a prompt.
+  parameters:
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor returned as nextCursor. Omit it to start at the beginning.
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      required: false
+      description: Maximum number of items to return.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      description: Catalog product id.
+      schema:
+        type: string
+    OrderId:
+      name: orderId
+      in: path
+      required: true
+      description: Order id.
+      schema:
+        type: string
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Unique key for this create attempt. Replays with the same key and the same body return the original order.
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+  responses:
+    Unauthorized:
+      description: The credential is missing or expired.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    NotFound:
+      description: The resource does not exist.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    TooManyRequests:
+      description: The caller exceeded the rate limit for this window.
+      headers:
+        X-RateLimit-Remaining:
+          description: Requests remaining in the current window.
+          schema:
+            type: integer
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+    Product:
+      type: object
+      required: [id, name, priceCents, currency]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        priceCents:
+          type: integer
+        currency:
+          type: string
+          enum: [USD, EUR]
+        tags:
+          type: array
+          items:
+            type: string
+    ProductPage:
+      type: object
+      required: [data, nextCursor]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Product"
+        nextCursor:
+          type: string
+          nullable: true
+    Order:
+      type: object
+      required: [id, sku, quantity, status]
+      properties:
+        id:
+          type: string
+        sku:
+          type: string
+        quantity:
+          type: integer
+        status:
+          type: string
+          enum: [placed, cancelled]
+        customerNote:
+          type: string
+    OrderPage:
+      type: object
+      required: [data, nextCursor]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+        nextCursor:
+          type: string
+          nullable: true
+    CreateOrder:
+      type: object
+      required: [sku, quantity]
+      properties:
+        sku:
+          type: string
+          description: Catalog SKU to purchase.
+        quantity:
+          type: integer
+          minimum: 1
+          description: Number of units.
+        customerNote:
+          type: string
+          description: Optional note for the packer.
+    AdminCommand:
+      type: object
+      properties:
+        action:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+          description: Unspecified bag of fields.
+    Problem:
+      type: object
+      description: Problem Details for HTTP APIs.
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string

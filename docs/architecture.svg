@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" role="img" aria-labelledby="title desc">
+  <title id="title">mcp-ready between an API and an agent</title>
+  <desc id="desc">A local OpenAPI document is scored, then used to scaffold a stdio MCP server that an agent calls.</desc>
+  <rect width="960" height="360" fill="#f4f1ea"/>
+  <g font-family="ui-sans-serif, system-ui, sans-serif">
+    <rect x="36" y="48" width="250" height="250" rx="16" fill="#fffdf8" stroke="#d9d0c1"/>
+    <text x="56" y="84" fill="#0f766e" font-size="13" font-weight="700" letter-spacing="0.08em">YOUR SERVICE</text>
+    <text x="56" y="124" fill="#1f2933" font-size="20" font-weight="700">Contract and code</text>
+    <text x="56" y="164" fill="#52606d" font-size="15">OpenAPI 3 document</text>
+    <text x="56" y="190" fill="#52606d" font-size="15">Route handlers, GraphQL</text>
+    <text x="56" y="216" fill="#52606d" font-size="15">README, llms.txt</text>
+    <text x="56" y="258" fill="#8a8175" font-size="13">Nothing leaves the machine.</text>
+
+    <rect x="355" y="48" width="250" height="250" rx="16" fill="#12352f"/>
+    <text x="375" y="84" fill="#9ee0d2" font-size="13" font-weight="700" letter-spacing="0.08em">MCP-READY</text>
+    <text x="375" y="124" fill="#f7f4ee" font-size="20" font-weight="700">Score, then scaffold</text>
+    <text x="375" y="168" fill="#d5ebe4" font-size="15">scan · 0 to 100 checklist</text>
+    <text x="375" y="194" fill="#d5ebe4" font-size="15">generate · stdio server</text>
+    <text x="375" y="220" fill="#d5ebe4" font-size="15">init · llms.txt + manifest</text>
+    <text x="375" y="258" fill="#8fb8ae" font-size="13">Fixtures, no API key.</text>
+
+    <rect x="674" y="48" width="250" height="250" rx="16" fill="#fffdf8" stroke="#d9d0c1"/>
+    <text x="694" y="84" fill="#b45309" font-size="13" font-weight="700" letter-spacing="0.08em">AGENT RUNTIME</text>
+    <text x="694" y="124" fill="#1f2933" font-size="20" font-weight="700">Tools it can call</text>
+    <text x="694" y="168" fill="#52606d" font-size="15">stdio MCP server</text>
+    <text x="694" y="194" fill="#52606d" font-size="15">one tool per operation</text>
+    <text x="694" y="220" fill="#52606d" font-size="15">mock, then your HTTP API</text>
+    <text x="694" y="258" fill="#8a8175" font-size="13">Independent of any vendor.</text>
+
+    <path d="M286 160 H338" stroke="#0f766e" stroke-width="2" fill="none"/>
+    <path d="M332 154 L346 160 L332 166" fill="#0f766e"/>
+    <path d="M605 160 H656" stroke="#b45309" stroke-width="2" fill="none"/>
+    <path d="M650 154 L664 160 L650 166" fill="#b45309"/>
+  </g>
+</svg>

@@ -1,0 +1,33 @@
+type Query {
+  product(id: ID!): Product
+  products(limit: Int, cursor: String): ProductConnection
+}
+
+type Mutation {
+  createOrder(input: CreateOrderInput!): Order
+}
+
+type Subscription {
+  orderUpdated(id: ID!): Order
+}
+
+type Product {
+  id: ID!
+  name: String!
+  priceCents: Int!
+}
+
+type ProductConnection {
+  nodes: [Product!]!
+  nextCursor: String
+}
+
+input CreateOrderInput {
+  sku: String!
+  quantity: Int!
+}
+
+type Order {
+  id: ID!
+  status: String!
+}

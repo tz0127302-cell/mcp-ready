@@ -1,0 +1,44 @@
+swagger: "2.0"
+info:
+  title: Legacy Widgets
+  version: "1.0.0"
+  description: A public Swagger 2 catalog. Rate limits apply to list calls. No authentication is required.
+paths:
+  /widgets:
+    get:
+      operationId: listWidgets
+      summary: List widgets
+      description: Return a page of widgets. Pass the cursor from nextCursor. Rate limits apply.
+      parameters:
+        - name: cursor
+          in: query
+          type: string
+          description: Opaque cursor returned as nextCursor.
+        - name: limit
+          in: query
+          type: integer
+          description: Maximum number of widgets to return.
+      responses:
+        "200":
+          description: A page of widgets.
+          schema:
+            $ref: "#/definitions/WidgetPage"
+definitions:
+  Widget:
+    type: object
+    required: [id, name]
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+  WidgetPage:
+    type: object
+    required: [data, nextCursor]
+    properties:
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/Widget"
+      nextCursor:
+        type: string

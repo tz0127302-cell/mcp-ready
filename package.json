@@ -1,0 +1,63 @@
+{
+  "name": "mcp-ready",
+  "version": "0.1.0",
+  "description": "Score how agent-ready an API is, and scaffold a starter MCP server that runs offline.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tz0127302-cell/mcp-ready.git"
+  },
+  "homepage": "https://github.com/tz0127302-cell/mcp-ready#readme",
+  "bugs": {
+    "url": "https://github.com/tz0127302-cell/mcp-ready/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "mcp-ready": "dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "openapi",
+    "cli",
+    "agents",
+    "llms.txt",
+    "developer-tools"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
+    "test": "tsx --test test/rubric.test.ts test/scan.test.ts test/generate.test.ts test/init.test.ts test/cli.test.ts",
+    "mcp-ready": "tsx src/cli.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "picocolors": "1.1.1",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.4.0",
+    "@modelcontextprotocol/server": "2.4.0",
+    "@types/node": "22.19.7",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "zod": "4.6.7"
+  }
+}

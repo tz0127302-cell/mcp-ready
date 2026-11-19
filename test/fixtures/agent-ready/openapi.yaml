@@ -1,0 +1,177 @@
+openapi: 3.0.3
+info:
+  title: Widget API
+  version: 1.0.0
+  description: |
+    Widget API stores named widgets for internal tools.
+    Rate limits are enforced per token. Send a bearer token on every call.
+servers:
+  - url: https://widgets.example.com
+security:
+  - bearerAuth: []
+paths:
+  /widgets:
+    get:
+      operationId: listWidgets
+      summary: List widgets
+      description: Return one page of widgets. Pass the cursor from nextCursor and stop when it is null.
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          description: Opaque cursor returned as nextCursor.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of widgets to return.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: A page of widgets.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WidgetPage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    post:
+      operationId: createWidget
+      summary: Create a widget
+      description: Create a widget. Send Idempotency-Key and reuse that key when retrying the same attempt.
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Unique key for this create attempt. Replays return the original widget.
+          schema:
+            type: string
+            minLength: 8
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWidget"
+      responses:
+        "201":
+          description: The widget that was created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Widget"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          description: The idempotency key was reused with a different body.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "422":
+          description: The widget name failed validation.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+webhooks:
+  widgetCreated:
+    post:
+      operationId: onWidgetCreated
+      summary: A widget was created
+      description: Subscribers receive the new widget. Acknowledge with an empty 200 response.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Widget"
+      responses:
+        "200":
+          description: Acknowledgement.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Short-lived bearer token issued by the identity provider. Send it in the Authorization header.
+  responses:
+    Unauthorized:
+      description: The credential is missing or expired.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    Forbidden:
+      description: The credential does not have permission for this widget.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+    TooManyRequests:
+      description: The caller exceeded the rate limit for this window.
+      headers:
+        X-RateLimit-Remaining:
+          description: Requests remaining in the current window.
+          schema:
+            type: integer
+        Retry-After:
+          description: Seconds to wait before the next attempt.
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    Widget:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+    WidgetPage:
+      type: object
+      required: [data, nextCursor]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Widget"
+        nextCursor:
+          type: string
+          nullable: true
+    CreateWidget:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: Display name of the widget.
+    Problem:
+      type: object
+      required: [type, title, status, detail]
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
