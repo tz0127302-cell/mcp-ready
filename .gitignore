@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.tmp-tests/
+coverage/
+*.tsbuildinfo
+.DS_Store
+orders-mcp/
+*.log

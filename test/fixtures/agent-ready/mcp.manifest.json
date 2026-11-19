@@ -1,0 +1,7 @@
+{
+  "name": "widget-api",
+  "version": "1.0.0",
+  "unofficial": true,
+  "transport": { "type": "stdio", "command": "npm start" },
+  "tools": []
+}

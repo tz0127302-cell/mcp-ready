@@ -1,0 +1,10 @@
+openapi: 3.0.3
+info:
+  title: Sparse
+  version: 0.0.1
+paths:
+  /do/{path}:
+    post:
+      responses:
+        "200":
+          description: ok

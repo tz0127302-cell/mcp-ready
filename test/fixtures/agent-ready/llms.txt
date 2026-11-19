@@ -1,0 +1,7 @@
+# Widget API
+
+> Widget API stores named widgets for internal tools.
+
+## Docs
+
+- [OpenAPI specification](openapi.yaml): Machine-readable contract.
